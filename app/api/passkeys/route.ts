@@ -35,6 +35,65 @@ export async function GET(request: NextRequest) {
   }
 }
 
+export async function PATCH(request: NextRequest) {
+  try {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const passkeyId = searchParams.get("id");
+
+    if (!passkeyId) {
+      return NextResponse.json(
+        { error: "Passkey ID is required" },
+        { status: 400 }
+      );
+    }
+
+    const body = await request.json();
+    const { label } = body;
+
+    if (typeof label !== "string") {
+      return NextResponse.json(
+        { error: "Label must be a string" },
+        { status: 400 }
+      );
+    }
+
+    // Verify the passkey belongs to the user before updating
+    const authenticator = await prisma.authenticator.findFirst({
+      where: {
+        id: passkeyId,
+        userId: session.user.id,
+      },
+    });
+
+    if (!authenticator) {
+      return NextResponse.json({ error: "Passkey not found" }, { status: 404 });
+    }
+
+    const updatedAuthenticator = await prisma.authenticator.update({
+      where: {
+        id: passkeyId,
+      },
+      data: {
+        label,
+      },
+    });
+
+    return NextResponse.json({ success: true, passkey: updatedAuthenticator });
+  } catch (error) {
+    console.error("Error updating passkey:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
 export async function DELETE(request: NextRequest) {
   try {
     const session = await auth();

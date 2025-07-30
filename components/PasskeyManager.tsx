@@ -10,8 +10,21 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { signIn as passkeySignIn } from "next-auth/webauthn";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Alert } from "@/components/ui/alert";
+import { signIn as passkeySignIn } from "next-auth/webauthn";
+import {
+  Laptop,
+  Smartphone,
+  Key,
+  Shield,
+  Cloud,
+  Check,
+  Pencil,
+  Save,
+  X,
+} from "lucide-react";
 
 interface Passkey {
   id: string;
@@ -19,6 +32,9 @@ interface Passkey {
   credentialDeviceType: string;
   credentialBackedUp: boolean;
   transports: string | null;
+  label: string | null;
+  lastUsed: string | null;
+  createdAt: string;
 }
 
 export default function PasskeyManager() {
@@ -28,6 +44,8 @@ export default function PasskeyManager() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [addPasskeyError, setAddPasskeyError] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editLabel, setEditLabel] = useState("");
 
   const fetchPasskeys = async () => {
     try {
@@ -54,7 +72,6 @@ export default function PasskeyManager() {
       setIsAddingPasskey(true);
       setAddPasskeyError(null);
       await passkeySignIn("passkey", { action: "register" });
-      // Refresh the list after adding
       await fetchPasskeys();
     } catch (err) {
       console.error("Add passkey error:", err);
@@ -99,26 +116,84 @@ export default function PasskeyManager() {
     }
   };
 
-  const getDeviceTypeIcon = (deviceType: string) => {
-    switch (deviceType.toLowerCase()) {
-      case "singledevice":
-        return "📱";
-      case "crossplatform":
-        return "🔑";
-      default:
-        return "🔐";
+  const handleUpdateLabel = async (passkeyId: string) => {
+    try {
+      const response = await fetch(`/api/passkeys?id=${passkeyId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ label: editLabel }),
+      });
+
+      if (response.ok) {
+        setPasskeys(
+          passkeys.map((p) =>
+            p.id === passkeyId ? { ...p, label: editLabel } : p
+          )
+        );
+        setEditingId(null);
+        setEditLabel("");
+      } else {
+        const data = await response.json();
+        setError(data.error || "Failed to update label");
+      }
+    } catch (error) {
+      setError("Failed to connect to server");
+      console.error("Error updating label:", error);
     }
   };
 
-  const formatDeviceType = (deviceType: string) => {
-    switch (deviceType.toLowerCase()) {
-      case "singledevice":
-        return "Device-bound";
-      case "crossplatform":
-        return "Cross-platform";
-      default:
-        return deviceType;
+  const getDeviceInfo = (passkey: Passkey) => {
+    const transports = passkey.transports?.toLowerCase() || "";
+    const deviceType = passkey.credentialDeviceType.toLowerCase();
+
+    // Detect platform
+    const isApple =
+      transports.includes("hybrid") ||
+      (transports.includes("internal") &&
+        (navigator.platform.includes("Mac") ||
+          navigator.platform.includes("iPhone") ||
+          navigator.platform.includes("iPad")));
+
+    const isWindows =
+      transports.includes("internal") && navigator.platform.includes("Win");
+
+    // Default name based on device type and platform
+    let defaultName = "Security Key";
+    if (deviceType === "singledevice") {
+      if (isApple) {
+        defaultName = "Apple Device";
+      } else if (isWindows) {
+        defaultName = "Windows Device";
+      } else {
+        defaultName = "Device-bound Key";
+      }
+    } else if (deviceType === "crossplatform") {
+      if (transports.includes("usb")) {
+        defaultName = "USB Security Key";
+      } else if (transports.includes("nfc")) {
+        defaultName = "NFC Security Key";
+      } else if (transports.includes("ble")) {
+        defaultName = "Bluetooth Security Key";
+      }
     }
+
+    return {
+      name: passkey.label || defaultName,
+      icon:
+        deviceType === "singledevice" ? (
+          isApple ? (
+            <Laptop className="h-5 w-5" />
+          ) : isWindows ? (
+            <Laptop className="h-5 w-5" />
+          ) : (
+            <Smartphone className="h-5 w-5" />
+          )
+        ) : (
+          <Key className="h-5 w-5" />
+        ),
+    };
   };
 
   useEffect(() => {
@@ -173,49 +248,103 @@ export default function PasskeyManager() {
         </Card>
       ) : (
         <div className="grid gap-4">
-          {passkeys.map((passkey) => (
-            <Card key={passkey.id}>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <span className="text-2xl">
-                      {getDeviceTypeIcon(passkey.credentialDeviceType)}
-                    </span>
-                    <div>
-                      <CardTitle className="text-lg">
-                        {formatDeviceType(passkey.credentialDeviceType)} Passkey
-                      </CardTitle>
-                      <CardDescription>
-                        ID: {passkey.credentialID.slice(0, 20)}...
-                      </CardDescription>
+          {passkeys.map((passkey) => {
+            const deviceInfo = getDeviceInfo(passkey);
+            return (
+              <Card key={passkey.id}>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 bg-muted rounded-lg">
+                        {deviceInfo.icon}
+                      </div>
+                      <div>
+                        {editingId === passkey.id ? (
+                          <div className="flex items-center space-x-2">
+                            <Input
+                              value={editLabel}
+                              onChange={(e) => setEditLabel(e.target.value)}
+                              placeholder="Enter a label"
+                              className="h-8"
+                            />
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleUpdateLabel(passkey.id)}
+                            >
+                              <Save className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => {
+                                setEditingId(null);
+                                setEditLabel("");
+                              }}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <CardTitle className="text-lg flex items-center space-x-2">
+                            <span>{deviceInfo.name}</span>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 w-6"
+                              onClick={() => {
+                                setEditingId(passkey.id);
+                                setEditLabel(passkey.label || "");
+                              }}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          </CardTitle>
+                        )}
+                        <CardDescription>
+                          Added{" "}
+                          {new Date(passkey.createdAt).toLocaleDateString()}
+                        </CardDescription>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      {passkey.credentialBackedUp && (
+                        <Badge
+                          variant="secondary"
+                          className="flex items-center space-x-1"
+                        >
+                          <Cloud className="h-3 w-3" />
+                          <span>Synced</span>
+                        </Badge>
+                      )}
+                      <Button
+                        onClick={() => handleDeletePasskey(passkey.id)}
+                        disabled={
+                          deletingId === passkey.id || passkeys.length === 1
+                        }
+                        variant="destructive"
+                        size="sm"
+                      >
+                        {deletingId === passkey.id ? "Deleting..." : "Delete"}
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    {passkey.credentialBackedUp && (
-                      <Badge variant="secondary">Synced</Badge>
-                    )}
-                    <Button
-                      onClick={() => handleDeletePasskey(passkey.id)}
-                      disabled={
-                        deletingId === passkey.id || passkeys.length === 1
-                      }
-                      variant="destructive"
-                      size="sm"
-                    >
-                      {deletingId === passkey.id ? "Deleting..." : "Delete"}
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              {passkey.transports && (
-                <CardContent className="pt-0">
-                  <div className="text-sm text-muted-foreground">
-                    Transport methods: {passkey.transports}
-                  </div>
-                </CardContent>
-              )}
-            </Card>
-          ))}
+                </CardHeader>
+                {passkey.transports && (
+                  <CardContent className="pt-0">
+                    <div className="text-sm text-muted-foreground">
+                      {passkey.lastUsed && (
+                        <div>
+                          Last used:{" "}
+                          {new Date(passkey.lastUsed).toLocaleString()}
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                )}
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>
