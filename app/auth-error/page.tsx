@@ -2,11 +2,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
-export default function AuthErrorPage({
+export default async function AuthErrorPage({
   searchParams,
 }: {
-  searchParams: { error?: string };
+  searchParams: Promise<{ error?: string }>;
 }) {
+  const params = await searchParams;
+
   const getErrorMessage = (error?: string) => {
     switch (error) {
       case "passkey-not-found":
@@ -30,7 +32,7 @@ export default function AuthErrorPage({
     }
   };
 
-  const { title, message } = getErrorMessage(searchParams.error);
+  const { title, message } = getErrorMessage(params.error);
 
   return (
     <div className="container mx-auto max-w-md py-16 px-4">

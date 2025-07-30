@@ -48,6 +48,30 @@ export default function PasskeyManager() {
   const [editLabel, setEditLabel] = useState("");
   const [savingLabelId, setSavingLabelId] = useState<string | null>(null);
 
+  // Generate a 4-digit alphanumeric uppercase hash from the credential ID
+  const generateKeyHash = (credentialID: string): string => {
+    // Simple hash function to create a consistent 4-character identifier
+    let hash = 0;
+    for (let i = 0; i < credentialID.length; i++) {
+      const char = credentialID.charCodeAt(i);
+      hash = (hash << 5) - hash + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+
+    // Convert to positive number and create 4 alphanumeric characters
+    const positiveHash = Math.abs(hash);
+    const chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    let result = "";
+
+    for (let i = 0; i < 4; i++) {
+      const index = (positiveHash >> (i * 5)) % chars.length;
+      result += chars[index];
+    }
+
+    // Format as XX-XX
+    return `${result.slice(0, 2)}-${result.slice(2, 4)}`;
+  };
+
   const fetchPasskeys = async () => {
     try {
       setError(null);
@@ -342,8 +366,15 @@ export default function PasskeyManager() {
                             </Button>
                           </CardTitle>
                         )}
-                        <CardDescription>
-                          Added {new Date(passkey.createdAt).toLocaleString()}
+                        <CardDescription className="space-y-1">
+                          <div className="flex items-center space-x-2">
+                            <span className="font-mono text-xs bg-muted px-2 py-1 rounded">
+                              {generateKeyHash(passkey.credentialID)}
+                            </span>
+                          </div>
+                          <div>
+                            Added {new Date(passkey.createdAt).toLocaleString()}
+                          </div>
                         </CardDescription>
                       </div>
                     </div>
