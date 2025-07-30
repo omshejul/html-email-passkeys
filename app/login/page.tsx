@@ -162,7 +162,7 @@ export default function Login() {
                   <strong>First time setup:</strong>
                   <ol className="mt-2 text-sm space-y-1">
                     <li>1. Enter your email address above</li>
-                    <li>2. Click "Create Passkey & Sign In"</li>
+                    <li>2. Click &quot;Create Passkey &amp; Sign In&quot;</li>
                     <li>3. Your browser will ask to create a new passkey</li>
                     <li>4. Use Face ID/Touch ID/Windows Hello to create it</li>
                   </ol>
@@ -194,14 +194,14 @@ export default function Login() {
                 <AlertDescription>
                   <strong>How it works:</strong>
                   <ol className="mt-2 text-sm space-y-1">
-                    <li>1. Click "Sign in with Passkey" above</li>
+                    <li>1. Click &quot;Sign in with Passkey&quot; above</li>
                     <li>
                       2. Your browser will ask to use your existing passkey
                     </li>
                     <li>
                       3. Use your biometric or security key to authenticate
                     </li>
-                    <li>4. You'll be signed in securely!</li>
+                    <li>4. You&apos;ll be signed in securely!</li>
                   </ol>
                 </AlertDescription>
               </Alert>

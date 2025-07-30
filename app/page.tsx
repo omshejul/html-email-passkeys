@@ -106,7 +106,8 @@ export default async function Home() {
           <span className="text-muted-foreground">
             {" "}
             You can add multiple passkeys to your account for different devices.
-            Click "Add Passkey" in the navigation to register a new one.
+            Click &quot;Add Passkey&quot; in the navigation to register a new
+            one.
           </span>
         </AlertDescription>
       </Alert>

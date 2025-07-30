@@ -1,10 +1,9 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { signIn, signOut } from "next-auth/react";
-import { signIn as passkeySignIn } from "next-auth/webauthn";
+import { signOut } from "next-auth/react";
 import Link from "next/link";
-import { useState } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Key, User, LogOut } from "lucide-react";
@@ -19,29 +18,6 @@ import {
 
 export default function AuthButton() {
   const { data: session, status } = useSession();
-  const [isAddingPasskey, setIsAddingPasskey] = useState(false);
-
-  const handleAddPasskey = async () => {
-    try {
-      setIsAddingPasskey(true);
-      await passkeySignIn("passkey", { action: "register" });
-    } catch (err) {
-      console.error("Add passkey error:", err);
-      // Don't show error for user cancellation
-      if (
-        err instanceof Error &&
-        (err.message.includes("not allowed") ||
-          err.message.includes("timed out"))
-      ) {
-        console.log("User cancelled passkey registration");
-        return;
-      }
-      // Only show errors for actual failures, not cancellations
-      alert("Failed to add passkey. Please try again.");
-    } finally {
-      setIsAddingPasskey(false);
-    }
-  };
 
   if (status === "loading") {
     return <Badge variant="secondary">Loading...</Badge>;
@@ -54,10 +30,12 @@ export default function AuthButton() {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-full">
               {session.user?.image ? (
-                <img
+                <Image
                   src={session.user.image}
                   alt="Profile"
-                  className="w-8 h-8 rounded-full"
+                  width={32}
+                  height={32}
+                  className="rounded-full"
                 />
               ) : (
                 <User className="h-5 w-5" />
@@ -80,7 +58,10 @@ export default function AuthButton() {
                 <span>Manage Passkeys</span>
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => signOut()} className="flex items-center">
+            <DropdownMenuItem
+              onClick={() => signOut()}
+              className="flex items-center"
+            >
               <LogOut className="mr-2 h-4 w-4" />
               <span>Sign Out</span>
             </DropdownMenuItem>

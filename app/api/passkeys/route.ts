@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
+import { Prisma } from "@prisma/client";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await auth();
 
@@ -74,8 +75,11 @@ export async function PATCH(request: NextRequest) {
         id: passkeyId,
       },
       data: {
-        updatedAt: new Date(),
-      } as any,
+        label: label || null,
+      } as Prisma.XOR<
+        Prisma.AuthenticatorUpdateInput,
+        Prisma.AuthenticatorUncheckedUpdateInput
+      >,
     });
 
     return NextResponse.json({ success: true, passkey: updatedAuthenticator });
