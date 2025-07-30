@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
 import authConfig from "./auth.config";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 
 // Validate required environment variables
 function validateAuthConfig() {
@@ -102,11 +102,9 @@ For more info: https://next-auth.js.org/configuration/options
 // Run validation
 validateAuthConfig();
 
-const prisma = new PrismaClient();
-
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma),
-  session: { strategy: "jwt" },
+  session: { strategy: "database" }, // Changed to database strategy for WebAuthn
   secret: process.env.AUTH_SECRET,
   ...authConfig,
 });

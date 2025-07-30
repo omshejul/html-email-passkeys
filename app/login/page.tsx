@@ -65,6 +65,16 @@ export default function Login() {
           console.log("User cancelled passkey operation");
           return;
         }
+
+        // Handle passkey not found error
+        if (err.message.includes("WebAuthn authenticator not found")) {
+          setError(
+            "Your passkey was not found. This can happen if the database was reset. Please switch to 'First Time' tab and register a new passkey."
+          );
+          setIsNewUser(true); // Switch to new user tab
+          return;
+        }
+
         setError("Failed to sign in with passkey. " + err.message);
       } else {
         setError("Failed to sign in with passkey. Please try again.");
