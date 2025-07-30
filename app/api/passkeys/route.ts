@@ -14,16 +14,8 @@ export async function GET(request: NextRequest) {
       where: {
         userId: session.user.id,
       },
-      select: {
-        id: true,
-        credentialID: true,
-        credentialDeviceType: true,
-        credentialBackedUp: true,
-        transports: true,
-        label: true,
-        lastUsed: true,
-        createdAt: true,
-        updatedAt: true,
+      include: {
+        user: true,
       },
     });
 
@@ -82,9 +74,8 @@ export async function PATCH(request: NextRequest) {
         id: passkeyId,
       },
       data: {
-        label,
         updatedAt: new Date(),
-      },
+      } as any,
     });
 
     return NextResponse.json({ success: true, passkey: updatedAuthenticator });
