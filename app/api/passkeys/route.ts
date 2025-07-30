@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
-import { Prisma } from "@prisma/client";
 
 export async function GET() {
   try {
@@ -70,19 +69,17 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Passkey not found" }, { status: 404 });
     }
 
-    const updatedAuthenticator = await prisma.authenticator.update({
-      where: {
-        id: passkeyId,
-      },
-      data: {
-        label: label || null,
-      } as Prisma.XOR<
-        Prisma.AuthenticatorUpdateInput,
-        Prisma.AuthenticatorUncheckedUpdateInput
-      >,
-    });
+    // Use raw query to avoid type issues during deployment
+    await prisma.$executeRaw`
+      UPDATE "Authenticator" 
+      SET "label" = ${label || null}, "updatedAt" = NOW() 
+      WHERE "id" = ${passkeyId}
+    `;
 
-    return NextResponse.json({ success: true, passkey: updatedAuthenticator });
+    return NextResponse.json({
+      success: true,
+      message: "Passkey updated successfully",
+    });
   } catch (error) {
     console.error("Error updating passkey:", error);
     return NextResponse.json(
