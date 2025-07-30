@@ -3,9 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "next-auth/react";
 import { auth } from "@/auth";
-import AuthButton from "@/components/AuthButton";
 import { ThemeProvider } from "@/components/theme-provider";
-import { ThemeToggle } from "@/components/theme-toggle";
+import Navigation from "@/components/Navigation";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,23 +40,9 @@ export default async function RootLayout({
           disableTransitionOnChange
         >
           <SessionProvider session={session}>
-            <div className="min-h-screen bg-background">
-              <nav className="bg-card shadow-sm border-b">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                  <div className="flex justify-between h-16">
-                    <div className="flex items-center">
-                      <h1 className="text-xl font-semibold text-foreground">
-                        HTML Email
-                      </h1>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <ThemeToggle />
-                      <AuthButton />
-                    </div>
-                  </div>
-                </div>
-              </nav>
-              <main>{children}</main>
+            <div className="min-h-[80vh] flex flex-col bg-background">
+              <Navigation />
+              <main className="flex flex-grow">{children}</main>
             </div>
           </SessionProvider>
         </ThemeProvider>
