@@ -251,7 +251,7 @@ export default function PasskeyManager() {
         <Button
           onClick={handleAddPasskey}
           disabled={isAddingPasskey}
-          className="bg-green-600 hover:bg-green-700 dark:bg-green-400 dark:hover:bg-green-500"
+          className="bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700"
         >
           {isAddingPasskey ? (
             <span className="flex items-center space-x-2">
@@ -312,7 +312,7 @@ export default function PasskeyManager() {
             const deviceInfo = getDeviceInfo(passkey);
             return (
               <Card key={passkey.id}>
-                <CardHeader className="pb-3">
+                <CardHeader className="">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       <div className="p-2 bg-muted rounded-lg">
@@ -352,7 +352,7 @@ export default function PasskeyManager() {
                           </div>
                         ) : (
                           <CardTitle className="text-lg flex items-center space-x-2">
-                            <span>{deviceInfo.name}</span>
+                            <span>{passkey.label || deviceInfo.name}</span>
                             <Button
                               size="sm"
                               variant="ghost"
@@ -408,18 +408,6 @@ export default function PasskeyManager() {
                     </div>
                   </div>
                 </CardHeader>
-                {passkey.transports && (
-                  <CardContent className="pt-0">
-                    <div className="text-sm text-muted-foreground">
-                      {passkey.lastUsed && (
-                        <div>
-                          Last used:{" "}
-                          {new Date(passkey.lastUsed).toLocaleString()}
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                )}
               </Card>
             );
           })}
