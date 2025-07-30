@@ -7,6 +7,15 @@ import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Key, User, LogOut } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu";
 
 export default function AuthButton() {
   const { data: session, status } = useSession();
@@ -41,32 +50,42 @@ export default function AuthButton() {
   if (session) {
     return (
       <div className="flex items-center space-x-4">
-        <div className="flex items-center space-x-2">
-          {session.user?.image && (
-            <img
-              src={session.user.image}
-              alt="Profile"
-              className="w-8 h-8 rounded-full"
-            />
-          )}
-          <span className="text-sm font-medium text-foreground">
-            {session.user?.name || session.user?.email}
-          </span>
-        </div>
-
-        <Button
-          onClick={handleAddPasskey}
-          disabled={isAddingPasskey}
-          variant="default"
-          size="sm"
-          className="bg-green-600 hover:bg-green-700 dark:bg-green-400 dark:hover:bg-green-500"
-        >
-          {isAddingPasskey ? "Adding..." : "Add Passkey"}
-        </Button>
-
-        <Button onClick={() => signOut()} variant="secondary" size="sm">
-          Sign Out
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="rounded-full">
+              {session.user?.image ? (
+                <img
+                  src={session.user.image}
+                  alt="Profile"
+                  className="w-8 h-8 rounded-full"
+                />
+              ) : (
+                <User className="h-5 w-5" />
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel className="text-muted-foreground flex items-center">
+              <Avatar className="h-6 w-6 mr-2">
+                <AvatarImage src={session.user?.image || ""} />
+                <AvatarFallback>
+                  {session.user?.name?.[0] || session.user?.email?.[0] || "U"}
+                </AvatarFallback>
+              </Avatar>
+              {session.user?.name || session.user?.email}
+            </DropdownMenuLabel>
+            <DropdownMenuItem asChild>
+              <Link href="/passkeys" className="flex items-center">
+                <Key className="mr-2 h-4 w-4" />
+                <span>Manage Passkeys</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => signOut()} className="flex items-center">
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Sign Out</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     );
   }

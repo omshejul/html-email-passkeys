@@ -24,6 +24,7 @@ import {
   Pencil,
   Save,
   X,
+  Loader2,
 } from "lucide-react";
 
 interface Passkey {
@@ -35,6 +36,7 @@ interface Passkey {
   label: string | null;
   lastUsed: string | null;
   createdAt: string;
+  updatedAt: string;
 }
 
 export default function PasskeyManager() {
@@ -46,6 +48,7 @@ export default function PasskeyManager() {
   const [addPasskeyError, setAddPasskeyError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editLabel, setEditLabel] = useState("");
+  const [savingLabelId, setSavingLabelId] = useState<string | null>(null);
 
   const fetchPasskeys = async () => {
     try {
@@ -118,6 +121,7 @@ export default function PasskeyManager() {
 
   const handleUpdateLabel = async (passkeyId: string) => {
     try {
+      setSavingLabelId(passkeyId);
       const response = await fetch(`/api/passkeys?id=${passkeyId}`, {
         method: "PATCH",
         headers: {
@@ -141,6 +145,8 @@ export default function PasskeyManager() {
     } catch (error) {
       setError("Failed to connect to server");
       console.error("Error updating label:", error);
+    } finally {
+      setSavingLabelId(null);
     }
   };
 
@@ -201,7 +207,14 @@ export default function PasskeyManager() {
   }, []);
 
   if (loading) {
-    return <div className="text-center">Loading passkeys...</div>;
+    return (
+      <div className="flex justify-center items-center py-8">
+        <div className="flex items-center space-x-2 text-muted-foreground">
+          <Loader2 className="h-5 w-5 animate-spin" />
+          <span>Loading passkeys...</span>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -218,7 +231,14 @@ export default function PasskeyManager() {
           disabled={isAddingPasskey}
           className="bg-green-600 hover:bg-green-700 dark:bg-green-400 dark:hover:bg-green-500"
         >
-          {isAddingPasskey ? "Adding..." : "Add New Passkey"}
+          {isAddingPasskey ? (
+            <span className="flex items-center space-x-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Adding...</span>
+            </span>
+          ) : (
+            "Add New Passkey"
+          )}
         </Button>
       </div>
 
@@ -231,6 +251,24 @@ export default function PasskeyManager() {
       {addPasskeyError && (
         <Alert variant="destructive" className="mb-4">
           {addPasskeyError}
+        </Alert>
+      )}
+
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <div className="flex items-center space-x-2">
+            <X className="h-4 w-4" />
+            <span>{error}</span>
+          </div>
+        </Alert>
+      )}
+
+      {addPasskeyError && (
+        <Alert variant="destructive" className="mb-4">
+          <div className="flex items-center space-x-2">
+            <X className="h-4 w-4" />
+            <span>{addPasskeyError}</span>
+          </div>
         </Alert>
       )}
 
@@ -271,8 +309,13 @@ export default function PasskeyManager() {
                               size="sm"
                               variant="ghost"
                               onClick={() => handleUpdateLabel(passkey.id)}
+                              disabled={savingLabelId === passkey.id}
                             >
-                              <Save className="h-4 w-4" />
+                              {savingLabelId === passkey.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Save className="h-4 w-4" />
+                              )}
                             </Button>
                             <Button
                               size="sm"
@@ -302,8 +345,7 @@ export default function PasskeyManager() {
                           </CardTitle>
                         )}
                         <CardDescription>
-                          Added{" "}
-                          {new Date(passkey.createdAt).toLocaleDateString()}
+                          Added {new Date(passkey.createdAt).toLocaleString()}
                         </CardDescription>
                       </div>
                     </div>
@@ -325,7 +367,14 @@ export default function PasskeyManager() {
                         variant="destructive"
                         size="sm"
                       >
-                        {deletingId === passkey.id ? "Deleting..." : "Delete"}
+                        {deletingId === passkey.id ? (
+                          <span className="flex items-center space-x-2">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span>Deleting...</span>
+                          </span>
+                        ) : (
+                          "Delete"
+                        )}
                       </Button>
                     </div>
                   </div>

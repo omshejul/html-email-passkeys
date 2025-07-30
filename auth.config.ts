@@ -4,7 +4,9 @@ import type { NextAuthConfig } from "next-auth";
 // Notice this is only an object, not a full Auth.js instance
 export default {
   providers: [Passkey],
-  experimental: { enableWebAuthn: true },
+    experimental: { 
+    enableWebAuthn: true,
+  },
   pages: {
     error: "/auth-error",
   },
@@ -18,6 +20,12 @@ export default {
         }
       }
       return true;
+    },
+    async session({ session, user }) {
+      if (session.user) {
+        session.user.id = user.id;
+      }
+      return session;
     },
   },
 } satisfies NextAuthConfig;

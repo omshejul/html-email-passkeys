@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/db";
 
 export async function GET(request: NextRequest) {
   try {
@@ -22,6 +20,10 @@ export async function GET(request: NextRequest) {
         credentialDeviceType: true,
         credentialBackedUp: true,
         transports: true,
+        label: true,
+        lastUsed: true,
+        createdAt: true,
+        updatedAt: true,
       },
     });
 
@@ -81,6 +83,7 @@ export async function PATCH(request: NextRequest) {
       },
       data: {
         label,
+        updatedAt: new Date(),
       },
     });
 
