@@ -9,7 +9,7 @@ export default function Footer() {
   const version = packageJson.version;
 
   return (
-    <footer className=" border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 py-8">
+    <footer className=" border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-2 py-4">
       <div className="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
         <div className="text-sm text-muted-foreground">
           © {currentYear} HTML Email{" "}

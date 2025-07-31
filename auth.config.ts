@@ -15,6 +15,7 @@ export default {
     enableWebAuthn: true,
   },
   pages: {
+    signIn: "/login",
     error: "/auth-error",
   },
   callbacks: {

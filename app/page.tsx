@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,37 +14,7 @@ export default async function Home() {
   const session = await auth();
 
   if (!session) {
-    return (
-      <div className="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-foreground mb-6">
-            Welcome to HTML Email
-          </h1>
-          <p className="text-xl text-muted-foreground mb-8">
-            Create and manage beautiful HTML emails with secure passkey
-            authentication
-          </p>
-          <div className="space-y-4">
-            <Card className="max-w-2xl mx-auto">
-              <CardHeader>
-                <CardTitle className="text-2xl">
-                  🔐 Secure Authentication
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription className="mb-4">
-                  Sign in securely using WebAuthn passkeys - no passwords
-                  required!
-                </CardDescription>
-                <Button asChild size="lg">
-                  <Link href="/login">Get Started</Link>
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
-    );
+    redirect("/login");
   }
 
   return (

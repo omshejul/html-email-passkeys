@@ -50,3 +50,4 @@ next-env.d.ts
 
 # migrations (uncomment if you want to ignore migrations in public repo)
 # /prisma/migrations/
+prisma/migrations/20250731114553_add_missing_authenticator_fields/migration.sql
