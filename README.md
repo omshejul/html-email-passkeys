@@ -1,8 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+This is a [Next.js](https://nextjs.org) project with NextAuth.js authentication supporting both Google OAuth and WebAuthn passkeys.
+
+## Authentication Setup
+
+This project supports two authentication methods:
+
+- **Google OAuth** - Sign in with your Google account
+- **WebAuthn Passkeys** - Secure, passwordless authentication using Face ID, Touch ID, Windows Hello, or security keys
+
+### Environment Variables
+
+Create a `.env.local` file in your project root with the following variables:
+
+```env
+# NextAuth.js Configuration
+AUTH_SECRET=your-secure-secret-here-generate-with-openssl-rand-base64-32
+NEXTAUTH_URL=http://localhost:3000
+
+# Database Configuration
+DATABASE_URL=postgresql://username:password@localhost:5432/database_name
+
+# Google OAuth Configuration
+GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+```
+
+### Google OAuth Setup
+
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select an existing one
+3. Enable the Google+ API
+4. Create credentials (OAuth 2.0 Client ID)
+5. Add authorized redirect URIs:
+   - Development: `http://localhost:3000/api/auth/callback/google`
+   - Production: `https://yourdomain.com/api/auth/callback/google`
+6. Copy the Client ID and Client Secret to your `.env.local` file
+
+### Database Setup
+
+This project uses Prisma with PostgreSQL. Run the following commands to set up your database:
+
+```bash
+npx prisma generate
+npx prisma db push
+```
 
 ## Getting Started
 
-First, run the development server:
+First, set up your environment variables as described above, then run the development server:
 
 ```bash
 npm run dev

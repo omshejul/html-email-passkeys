@@ -15,7 +15,13 @@ export default async function AuthErrorPage({
         return {
           title: "Passkey Not Found",
           message:
-            "The passkey you're trying to use is no longer registered. This can happen if the database was reset or if the passkey was deleted. Please register a new passkey to continue.",
+            "The passkey you're trying to use is no longer registered. This can happen if the database was reset or if the passkey was deleted. Please try signing in with Google instead.",
+        };
+      case "passkey-new-user-not-allowed":
+        return {
+          title: "New User Registration",
+          message:
+            "New users can only create accounts using Google OAuth. Please use the 'New User' tab and sign up with Google to create your account.",
         };
       case "Configuration":
         return {
@@ -36,9 +42,11 @@ export default async function AuthErrorPage({
 
   return (
     <div className="container mx-auto max-w-md py-16 px-4">
-      <Card>
+      <Card className=" gap-2">
         <CardHeader>
-          <CardTitle className="text-red-600">{title}</CardTitle>
+          <CardTitle className="text-lg font-semibold text-red-600 dark:text-red-400">
+            {title}
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-muted-foreground">{message}</p>

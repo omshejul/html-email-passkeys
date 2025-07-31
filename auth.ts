@@ -68,6 +68,16 @@ function validateAuthConfig() {
     }
   }
 
+  // Google OAuth validation
+  if (!process.env.GOOGLE_CLIENT_ID) {
+    warnings.push("GOOGLE_CLIENT_ID not found - Google OAuth will not work");
+  }
+  if (!process.env.GOOGLE_CLIENT_SECRET) {
+    warnings.push(
+      "GOOGLE_CLIENT_SECRET not found - Google OAuth will not work"
+    );
+  }
+
   // Display warnings
   if (warnings.length > 0) {
     console.warn(`
@@ -90,9 +100,12 @@ To fix this:
    AUTH_SECRET=your-secure-secret-here
    DATABASE_URL="file:./dev.db"
    NEXTAUTH_URL="http://localhost:3000" (for development)
+   GOOGLE_CLIENT_ID=your-google-client-id
+   GOOGLE_CLIENT_SECRET=your-google-client-secret
 
 3. Generate a secure secret: openssl rand -base64 32
-4. Restart your development server
+4. Set up Google OAuth credentials at https://console.cloud.google.com
+5. Restart your development server
 
 For more info: https://next-auth.js.org/configuration/options
     `);

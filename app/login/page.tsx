@@ -1,12 +1,11 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { useSession, signIn as nextAuthSignIn } from "next-auth/react";
 import { signIn } from "next-auth/webauthn";
 import { redirect } from "next/navigation";
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -16,12 +15,14 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { LuKey, LuUserPlus, LuLogIn } from "react-icons/lu";
+import { FcGoogle } from "react-icons/fc";
 
 export default function Login() {
   const { data: session, status } = useSession();
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState("");
-  const [email, setEmail] = useState("");
   const [isNewUser, setIsNewUser] = useState(false);
 
   useEffect(() => {
@@ -30,28 +31,17 @@ export default function Login() {
     }
   }, [session]);
 
-  const handlePasskeySignin = async (withEmail = false) => {
+  const handlePasskeySignin = async () => {
     try {
       setIsLoading(true);
       setError("");
 
-      console.log(
-        "Attempting passkey signin...",
-        withEmail ? `with email: ${email}` : "without email"
-      );
+      console.log("Attempting passkey signin...");
 
-      if (withEmail && email) {
-        // For first-time users, include email in the signin
-        await signIn("passkey", {
-          email: email,
-          callbackUrl: "/",
-        });
-      } else {
-        // For existing users
-        await signIn("passkey", {
-          callbackUrl: "/",
-        });
-      }
+      // For existing users
+      await signIn("passkey", {
+        callbackUrl: "/",
+      });
     } catch (err) {
       console.error("Passkey signin error:", err);
 
@@ -69,18 +59,30 @@ export default function Login() {
         // Handle passkey not found error
         if (err.message.includes("WebAuthn authenticator not found")) {
           setError(
-            "Your passkey was not found. This can happen if the database was reset. Please switch to 'First Time' tab and register a new passkey."
+            "Passkey not found. Try signing in with Google instead, or contact support if you need help."
           );
-          setIsNewUser(true); // Switch to new user tab
           return;
         }
 
-        setError("Failed to sign in with passkey. " + err.message);
+        setError("Passkey sign-in failed. " + err.message);
       } else {
-        setError("Failed to sign in with passkey. Please try again.");
+        setError("Passkey sign-in failed. Please try again.");
       }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignin = async () => {
+    try {
+      setIsGoogleLoading(true);
+      setError("");
+      await nextAuthSignIn("google", { callbackUrl: "/" });
+    } catch (err) {
+      console.error("Google signin error:", err);
+      setError("Google sign-in failed. Please try again.");
+    } finally {
+      setIsGoogleLoading(false);
     }
   };
 
@@ -97,14 +99,22 @@ export default function Login() {
   }
 
   return (
-    <div className="relative flex flex-grow items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-md">
+    <motion.div
+      className="relative flex flex-grow items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8"
+      initial={{ opacity: 0, scale: 0.95, y: 4, filter: "blur(4px)" }}
+      animate={{ opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }}
+      transition={{
+        duration: 0.5,
+        ease: [0.4, 0, 0.2, 1],
+      }}
+    >
+      <Card className="w-full max-w-md py-8 sm:p-4 sm:py-12 md:py-12 lg:py-12">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">
             Sign in to your account
           </CardTitle>
           <CardDescription className="text-center">
-            Use WebAuthn passkeys for secure, passwordless authentication
+            Sign in to your account or create a new one.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -118,97 +128,96 @@ export default function Login() {
             value={isNewUser ? "new" : "existing"}
             onValueChange={(value) => setIsNewUser(value === "new")}
           >
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="existing">Existing User</TabsTrigger>
-              <TabsTrigger value="new">First Time</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="new" className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email address</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
-                  required
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="relative mb-4">
+                <TabsList className="grid w-full bg-muted grid-cols-2">
+                  <TabsTrigger
+                    value="existing"
+                    className="data-[state=active]:shadow-none data-[state=active]:bg-transparent dark:data-[state=active]:bg-transparent border-none w-full relative z-10"
+                  >
+                    <LuLogIn className="mr-2 h-4 w-4" />
+                    Existing User
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="new"
+                    className="data-[state=active]:shadow-none data-[state=active]:bg-transparent dark:data-[state=active]:bg-transparent border-none w-full relative z-10"
+                  >
+                    <LuUserPlus className="mr-2 h-4 w-4" />
+                    New User
+                  </TabsTrigger>
+                </TabsList>
+                <motion.div
+                  // "cursor-pointer data-[state=active]:bg-background dark:data-[state=active]:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30 text-foreground dark:text-muted-foreground inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+                  className="absolute top-[10%] bottom-[10%] w-[49%] mx-[1%] border border-border bg-background dark:bg-input/30 px-2 py-1 inline-flex h-[calc(80%)] flex-1 items-center justify-center gap-1.5 rounded-md text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+                  animate={{
+                    x: isNewUser ? "100%" : "0%",
+                  }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 400,
+                    damping: 30,
+                    duration: 0.25,
+                  }}
                 />
               </div>
+            </motion.div>
 
-              <Button
-                onClick={() => handlePasskeySignin(true)}
-                disabled={isLoading || !email}
-                className="w-full"
-              >
-                {isLoading
-                  ? "Creating/Signing in..."
-                  : "Create Passkey & Sign In"}
-              </Button>
-
-              <div className="text-center space-y-2">
-                <p className="text-sm text-muted-foreground">
-                  🔐 <strong>First time?</strong> Enter your email above, then
-                  your browser will create a new passkey
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  ✅ Works with Face ID, Touch ID, Windows Hello, or security
-                  keys
-                </p>
+            <TabsContent value="new" className="space-y-4">
+              <div className="space-y-3">
+                <Button
+                  onClick={handleGoogleSignin}
+                  disabled={isGoogleLoading}
+                  className="w-full"
+                  variant="outline"
+                >
+                  <FcGoogle className="mr-2 h-4 w-4" />
+                  {isGoogleLoading
+                    ? "Creating account..."
+                    : "Sign up with Google"}
+                </Button>
               </div>
-
-              <Alert>
-                <AlertDescription>
-                  <strong>First time setup:</strong>
-                  <ol className="mt-2 text-sm space-y-1">
-                    <li>1. Enter your email address above</li>
-                    <li>2. Click &quot;Create Passkey &amp; Sign In&quot;</li>
-                    <li>3. Your browser will ask to create a new passkey</li>
-                    <li>4. Use Face ID/Touch ID/Windows Hello to create it</li>
-                  </ol>
-                </AlertDescription>
-              </Alert>
             </TabsContent>
 
             <TabsContent value="existing" className="space-y-4">
-              <Button
-                onClick={() => handlePasskeySignin(false)}
-                disabled={isLoading}
-                className="w-full"
-              >
-                {isLoading ? "Signing in..." : "Sign in with Passkey"}
-              </Button>
+              <div className="space-y-3">
+                <Button
+                  onClick={handleGoogleSignin}
+                  disabled={isGoogleLoading}
+                  variant="outline"
+                  className="w-full"
+                >
+                  <FcGoogle className="mr-2 h-4 w-4" />
+                  {isGoogleLoading ? "Signing in..." : "Continue with Google"}
+                </Button>
 
-              <div className="text-center space-y-2">
-                <p className="text-sm text-muted-foreground">
-                  🔐 <strong>Returning user?</strong> Your browser will use your
-                  existing passkey
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  ✅ Works with Face ID, Touch ID, Windows Hello, or security
-                  keys
-                </p>
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 py-0.5 text-muted-foreground rounded-md border border-border">
+                      Or use your passkey
+                    </span>
+                  </div>
+                </div>
+
+                <Button
+                  onClick={handlePasskeySignin}
+                  disabled={isLoading}
+                  className="w-full"
+                >
+                  <LuKey className="mr-2 h-4 w-4" />
+                  {isLoading ? "Signing in..." : "Sign in with Passkey"}
+                </Button>
               </div>
-
-              <Alert>
-                <AlertDescription>
-                  <strong>How it works:</strong>
-                  <ol className="mt-2 text-sm space-y-1">
-                    <li>1. Click &quot;Sign in with Passkey&quot; above</li>
-                    <li>
-                      2. Your browser will ask to use your existing passkey
-                    </li>
-                    <li>
-                      3. Use your biometric or security key to authenticate
-                    </li>
-                    <li>4. You&apos;ll be signed in securely!</li>
-                  </ol>
-                </AlertDescription>
-              </Alert>
             </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
-    </div>
+    </motion.div>
   );
 }
