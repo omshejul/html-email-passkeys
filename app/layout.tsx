@@ -5,6 +5,7 @@ import { SessionProvider } from "next-auth/react";
 import { auth } from "@/auth";
 import { ThemeProvider } from "@/components/theme-provider";
 import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,7 +21,16 @@ export const metadata: Metadata = {
   title: "HTML Email",
   description:
     "Create and manage HTML emails with a clean, modern interface. Built with Next.js, React, and Tailwind CSS.",
-  keywords: ["HTML", "email", "marketing", "email marketing", "email builder", "email template", "email design", "email development"],
+  keywords: [
+    "HTML",
+    "email",
+    "marketing",
+    "email marketing",
+    "email builder",
+    "email template",
+    "email design",
+    "email development",
+  ],
   authors: [{ name: "Om Shejul" }],
   creator: "Om Shejul",
   icons: {
@@ -70,9 +80,10 @@ export default async function RootLayout({
           disableTransitionOnChange
         >
           <SessionProvider session={session}>
-            <div className="min-h-[80vh] flex flex-col bg-background">
+            <div className="min-h-screen flex flex-col bg-background">
               <Navigation />
               <main className="flex flex-grow">{children}</main>
+              <Footer />
             </div>
           </SessionProvider>
         </ThemeProvider>
